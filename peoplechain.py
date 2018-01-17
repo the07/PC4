@@ -69,5 +69,12 @@ class Peoplechain(object):
             if user.user_type == 3:
                 return user
 
+    def get_unconfirmed_records(self, address):
+        urecords = []
+        for record in self.unconfirmed_records:
+            if record.endorser == address or record.endorser:
+                urecords.append(record.to_json())
+        return urecords
+
 if __name__ == '__main__':
     pass

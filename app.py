@@ -157,6 +157,7 @@ class App(NodeMixin):
         detail = request.content.read().decode('utf-8').split('=')[1]
         for each_endorsee in content:
             record = Record(each_endorsee, self.key.get_public_key(), detail)
+            record.sign(self.key.get_private_key())
             self.broadcast_record(record)
         message = "Checked records signed. <a href='/user'>Go Back</a>"
         return json.dumps(message)

@@ -193,6 +193,14 @@ class FullNode(NodeMixin):
             #self.peoplechain.add_record_to_user(payment_record) #TODO: verify this record.signature == this.record.endorser.somerecord.hash
             return
 
+    @app.route('/record/<address>', methods=['GET'])
+    def get_all_unconfirmed_transactions(self, request, address):
+        urecords = self.peoplechain.get_unconfirmed_records(address)
+        data = {
+            "records": urecords
+        }
+        return json.dumps(data).encode('utf-8')
+
 
     @app.route('/user', methods=['POST'])
     def create_user(self, request):
