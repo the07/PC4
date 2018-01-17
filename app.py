@@ -22,6 +22,7 @@ class App(NodeMixin):
         self.app.run('0.0.0.0', self.CLIENT_PORT)
 
     def get_user(self, address):
+        self.request_nodes_from_all()
         node = self.random_node()
         url = self.USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
         response = requests.get(url)
@@ -32,7 +33,14 @@ class App(NodeMixin):
 
     def get_unconfirmed_records(self, address):
         #ur.endorser -> sign it, ur.endorsee -> show in pending
-        return []
+        self.request_nodes_from_all()
+        node = self.random_node()
+        url = self.URECORD_URL.format(node, self.FULL_NODE_PORT, address)
+        response = requests.get(url)
+        urecords = []
+        for record in json.loads(response.content.decode('utf-8'))['records']:
+            urecords.append(Record.from_json(json.loads(record)))
+        return urecords
 
     def get_balance(self, address):
         self.request_nodes_from_all()
