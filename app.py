@@ -122,7 +122,7 @@ class App(NodeMixin):
                     records_div.append(new_p_tag)
 
             record_request_form = soup.find(id="record_request_form")
-            for record in user.records:
+            for record in unconfirmed_records:
                 if record.endorser == user.address:
                     new_input_tag = soup.new_tag("input", type="checkbox", checked="checked", value=record.endorsee)
                     new_input_tag["name"] = record.endorsee
