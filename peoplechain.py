@@ -53,7 +53,7 @@ class Peoplechain(object):
 
     def get_balance(self, address):
         balance = 100
-        for user in self.peoplechain.users:
+        for user in self.users:
             for record in user.records:
                 if record.endorsee == address:
                     if record.endorser == self.get_genesis_user().address:

@@ -182,7 +182,7 @@ class FullNode(NodeMixin):
     @app.route('/record', methods=['POST'])
     def add_record(self, request):
         record_data = json.loads(request.content.read().decode('utf-8'))
-        record_json = json.loads(record_data)['record']
+        record_json = json.loads(record_data['record'])
         record = Record.from_json(record_json)
         if record.signature is None:
             self.peoplechain.add_unconfirmed_record(record)
@@ -244,7 +244,7 @@ class FullNode(NodeMixin):
 
     @app.route('/balance/<address>', methods=['GET'])
     def get_balance(self, request, address):
-        return json.dumps(self.peoplechain.get_balance(address))
+        return str(self.peoplechain.get_balance(address))
 
 if __name__ == '__main__':
     node = FullNode()

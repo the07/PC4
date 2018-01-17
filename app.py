@@ -25,7 +25,7 @@ class App(NodeMixin):
         node = self.random_node()
         url = self.USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
         response = requests.get(url)
-        response_content = response.json().deocde('utf-8')
+        response_content = response.json()
         if response_content is not '':
             user_json = json.loads(response_content['user'])
             return User.from_json(user_json)
@@ -40,7 +40,7 @@ class App(NodeMixin):
         url = self.BALANCE_URL.format(node, self.FULL_NODE_PORT, address)
         try:
             response = requests.get(url)
-            return response.json().decode('utf-8')
+            return response.content.decode('utf-8')
         except requests.exceptions.RequestException as re:
             pass
         return None
@@ -99,7 +99,7 @@ class App(NodeMixin):
             soup.find(id='address').string = user.address
             soup.find(id='email').string = user.email
             soup.find(id='balance').string = self.get_balance(user.address)
-            soup.find(id='user_type').string = self.user_type
+            soup.find(id='user_type').string = user.user_type
 
             records_div = soup.find(id="records")
             for record in user.records:
