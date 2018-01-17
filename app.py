@@ -23,7 +23,7 @@ class App(NodeMixin):
 
     def get_user(self, address):
         node = self.random_node()
-        url = USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
+        url = self.USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
         response = requests.get(url)
         response_content = response.json()
         if response_content is not '':
@@ -61,7 +61,7 @@ class App(NodeMixin):
         self.key = Key()
         user = User(self.key.get_public_key(), name, email, user_type)
         self.broadcast_user(user)
-        message = "Your account has been created, please note your address: {} and password: {}.".format(self.key.get_public_key(), self.eky.get_private_key()) + "<a href='index.html'>Login</a>"
+        message = "Your account has been created, please note your address: {} and password: {}.".format(self.key.get_public_key(), self.key.get_private_key()) + "<a href='index.html'>Login</a>"
         return json.dumps(message)
 
     @app.route('/login', methods=['POST'])
@@ -95,11 +95,11 @@ class App(NodeMixin):
             html_file = open('web/user.html').read()
             soup = BeautifulSoup(html_file, 'html.parser')
 
-            soup.find('name').string = user.name
-            soup.find('address').string = user.address
-            soup.find('email').string = user.email
-            soup.find('balance').string = self.get_balance(user.address)
-            soup.find('user_type').string = self.user_type
+            soup.find(id='name').string = user.name
+            soup.find(id='address').string = user.address
+            soup.find(id='email').string = user.email
+            soup.find(id='balance').string = self.get_balance(user.address)
+            soup.find(id='user_type').string = self.user_type
 
             records_div = soup.find(id="records")
             for record in user.records:
