@@ -25,7 +25,7 @@ class App(NodeMixin):
         node = self.random_node()
         url = self.USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
         response = requests.get(url)
-        response_content = response.json()
+        response_content = response.json().deocde('utf-8')
         if response_content is not '':
             user_json = json.loads(response_content['user'])
             return User.from_json(user_json)
@@ -40,7 +40,7 @@ class App(NodeMixin):
         url = self.BALANCE_URL.format(node, self.FULL_NODE_PORT, address)
         try:
             response = requests.get(url)
-            return response.json()
+            return response.json().decode('utf-8')
         except requests.exceptions.RequestException as re:
             pass
         return None
