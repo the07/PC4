@@ -23,6 +23,16 @@ class App(NodeMixin):
         self.request_nodes_from_all()
         self.app.run('0.0.0.0', self.CLIENT_PORT)
 
+    def get_genesis_user_address(self):
+        self.request_nodes_from_all()
+        for node in self.full_nodes:
+            url = self.GENESIS_URL.format(node, self.FULL_NODE_PORT)
+            try:
+                response = requests.get(url)
+                return response.content.decode('utf-8')
+            except requests.exceptions.RequestException as re:
+                pass
+
     def get_user(self, address):
         self.request_nodes_from_all()
         for node in self.full_nodes:
@@ -189,7 +199,16 @@ class App(NodeMixin):
 
     @app.route('/purchase', methods=['POST'])
     def handle_payment(self, request):
-        print (request.content)
+        razorpay_payment_id = request.content.read().decode('utf-8').split('&')[1].split('=')[1]
+        #TODO: capture payment
+        endorser = self.get_genesis_user_address()
+        endorsee = self.key.get_public_key()
+        detail = "CoinPurchase"
+        record = Record(endorsee, endorser, detail)
+        self.broadcast_record(record)
+        message = "Once transaction is mined, amount will be credited to you account. <a href='/user'>Go Back</a>"
+        return json.dumps(message)
+
 
 if __name__ == '__main__':
     app = App()

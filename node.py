@@ -21,6 +21,7 @@ class NodeMixin(object):
     USER_URL = "http://{}:{}/user"
     BALANCE_URL = "http://{}:{}/balance/{}"
     USER_GET_URL = "http://{}:{}/user/{}"
+    GENESIS_URL = "http://{}:{}/genesis"
 
     def request_nodes(self, node):
         url = self.NODES_URL.format(node, self.FULL_NODE_PORT)
@@ -255,6 +256,10 @@ class FullNode(NodeMixin):
     @app.route('/balance/<address>', methods=['GET'])
     def get_balance(self, request, address):
         return str(self.peoplechain.get_balance(address))
+
+    @app.route('/genesis', methods=['GET'])
+    def get_genesis_user_address(self, request):
+        return self.peoplechain.get_genesis_user_address()
 
 if __name__ == '__main__':
     private_key = str(input('Enter private key, leave blank for new chain'))

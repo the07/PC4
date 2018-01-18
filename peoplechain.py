@@ -56,7 +56,7 @@ class Peoplechain(object):
         for user in self.users:
             for record in user.records:
                 if record.endorsee == address:
-                    if record.endorser == self.get_genesis_user().address:
+                    if record.endorser == self.get_genesis_user_address():
                         balance += 1000
                     else:
                         balance += 50
@@ -64,10 +64,10 @@ class Peoplechain(object):
                     balance -= 50
         return balance
 
-    def get_genesis_user(self):
+    def get_genesis_user_address(self):
         for user in self.users:
             if user.user_type == 3:
-                return user
+                return user.address
 
     def get_unconfirmed_records(self, address):
         ucrecords = []
