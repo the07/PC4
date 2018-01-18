@@ -127,8 +127,9 @@ class FullNode(NodeMixin):
             remote_chain = self.download()
             self.peoplechain = Peoplechain(remote_chain)
             self.node = self.get_my_node()
+            self.broadcast_node(self.node)
             self.full_nodes.union([self.node])
-            self.broadcast_node()
+
 
         print ("\n -------------- Starting Full Node Server -------------- \n")
         self.app.run('0.0.0.0', self.FULL_NODE_PORT)
@@ -165,10 +166,10 @@ class FullNode(NodeMixin):
         my_node = requests.get('https://api.ipify.org').text
         return my_node
 
-    def broadcast_node(self):
+    def broadcast_node(self, node):
         bad_nodes = set()
         data = {
-            "host": self.node
+            "host": node
         }
         for node in self.full_nodes:
             url = self.NODES_URL.format(node, self.FULL_NODE_PORT)
