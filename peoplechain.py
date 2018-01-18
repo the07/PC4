@@ -66,7 +66,7 @@ class Peoplechain(object):
 
     def get_genesis_user_address(self):
         for user in self.users:
-            if user.user_type == 3:
+            if user.user_type == '3':
                 return user.address
 
     def get_unconfirmed_records(self, address):

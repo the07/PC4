@@ -113,7 +113,7 @@ class FullNode(NodeMixin):
             print ("Generating Genesis User")
             print ("Network Key: {}".format(self.key.get_private_key()))
             #TODO: store the information in config file
-            user = User(self.key.get_public_key(), "Network", "peoplechain@peoplechain.in", 3)
+            user = User(self.key.get_public_key(), "Network", "peoplechain@peoplechain.in", '3')
             self.peoplechain = Peoplechain()
             self.peoplechain.add_user(user)
             print ("Peoplechain Created.")
