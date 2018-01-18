@@ -34,7 +34,7 @@ class Peoplechain(object):
     def record_signed(self, record):
         for unconfirmed_record in self.unconfirmed_records:
             # Record now has signature, so we cannot simply use 'record in'
-            if unconfirmed_record.endorsee == record.endorsee and unconfirmed_records.endorser == record.endorser and unconfirmed_records.detail == record.detail:
+            if unconfirmed_record.endorsee == record.endorsee and unconfirmed_record.endorser == record.endorser and unconfirmed_record.detail == record.detail:
                 self.unconfirmed_record.remove(record)
                 self.add_record_to_user(record)
                 return
