@@ -11,6 +11,8 @@ from user import User
 from key import Key
 from node import NodeMixin
 
+import razorpay
+
 class App(NodeMixin):
 
     app = Klein()
@@ -185,6 +187,9 @@ class App(NodeMixin):
         message = "Checked records signed. <a href='/user'>Go Back</a>"
         return json.dumps(message)
 
+    @app.route('/purchase', methods=['POST'])
+    def handle_payment(self, request):
+        print (request.content)
 
 if __name__ == '__main__':
     app = App()

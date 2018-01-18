@@ -27,13 +27,28 @@
       Record Requests:
     </h3>
     <div id="record_requests">
-      
+
     </div>
     <form action="/record" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
       <h3>Create Record</h3>
       <input type="text" name="address" placeholder="Enter address of endorser"/>
       <input type="text" name="detail" placeholder="Record Details" />
       <input type="submit" value="Request Record Signature" />
+    </form>
+    <br />
+    <br />
+    <form action="/purchase" method="POST">
+      <!-- Note that the amount is in paise = 50 INR -->
+      <script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          data-key="rzp_test_qXGJ3eMZId8uIx"
+          data-amount="1000"
+          data-buttontext="Buy 1000 coins"
+          data-name="Peoplechain"
+          data-description="Peoplechain Coins"
+          data-image="https://openclipart.org/image/2400px/svg_to_png/215499/users.png"
+          data-theme.color="#F37254"></script>
+      <input type="hidden" value="Hidden Element" name="hidden">
     </form>
     <br />
     <br />
