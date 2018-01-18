@@ -23,29 +23,35 @@ class App(NodeMixin):
 
     def get_user(self, address):
         self.request_nodes_from_all()
-        node = self.random_node()
-        url = self.USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
-        response = requests.get(url)
-        response_content = response.json()
-        if response_content is not '':
-            user_json = json.loads(response_content['user'])
-            return User.from_json(user_json)
+        for node in self.full_nodes:
+            url = self.USER_GET_URL.format(node, self.FULL_NODE_PORT, address)
+            try:
+                response = requests.get(url)
+                response_content = response.json()
+                if response_content is not '':
+                    user_json = json.loads(response_content['user'])
+                    return User.from_json(user_json)
+            except requests.exceptions.RequestException as re:
+                pass
 
     def get_unconfirmed_records(self, address):
         #ur.endorser -> sign it, ur.endorsee -> show in pending
         self.request_nodes_from_all()
-        node = self.random_node()
-        url = self.URECORD_URL.format(node, self.FULL_NODE_PORT, address)
-        response = requests.get(url)
-        urecords = []
-        for record in json.loads(response.content.decode('utf-8'))['records']:
-            urecords.append(Record.from_json(json.loads(record)))
-        return urecords
+        for node in self.full_nodes:
+            url = self.URECORD_URL.format(node, self.FULL_NODE_PORT, address)
+            try:
+                response = requests.get(url)
+                urecords = []
+                for record in json.loads(response.content.decode('utf-8'))['records']:
+                    urecords.append(Record.from_json(json.loads(record)))
+                return urecords
+            except requests.exceptions.RequestException as re:
+                pass
 
     def get_balance(self, address):
         self.request_nodes_from_all()
-        node = self.random_node()
-        url = self.BALANCE_URL.format(node, self.FULL_NODE_PORT, address)
+        for node in self.full_nodes:
+            url = self.BALANCE_URL.format(node, self.FULL_NODE_PORT, address)
         try:
             response = requests.get(url)
             return response.content.decode('utf-8')
@@ -110,7 +116,8 @@ class App(NodeMixin):
             soup.find(id='user_type').string = user.user_type
 
             records_div = soup.find(id="records")
-            for record in user.records:
+            for rec in user.records:
+                record = Record.from_json(rec)
                 new_p_tag = soup.new_tag('p')
                 new_p_tag.string = "Record Detail: " + record.detail + "        Signed By: " + record.endorser
                 records_div.append(new_p_tag)

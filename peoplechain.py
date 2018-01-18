@@ -35,7 +35,7 @@ class Peoplechain(object):
         for unconfirmed_record in self.unconfirmed_records:
             # Record now has signature, so we cannot simply use 'record in'
             if unconfirmed_record.endorsee == record.endorsee and unconfirmed_record.endorser == record.endorser and unconfirmed_record.detail == record.detail:
-                self.unconfirmed_record.remove(record)
+                self.unconfirmed_records.remove(unconfirmed_record)
                 self.add_record_to_user(record)
                 return
 
@@ -64,8 +64,8 @@ class Peoplechain(object):
                     balance -= 50
         return balance
 
-    def get_genesis_user(self, address):
-        for user in self.peoplechain.users:
+    def get_genesis_user(self):
+        for user in self.users:
             if user.user_type == 3:
                 return user
 

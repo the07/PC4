@@ -8,9 +8,11 @@ from record import Record
 from user import User
 from key import Key
 
+import socket
+
 class NodeMixin(object):
 
-    full_nodes = set(['192.168.2.3']) #TODO move to a configuration file
+    full_nodes = set(['172.31.25.30']) #TODO move to a configuration file
     FULL_NODE_PORT = 30609
     NODES_URL = "http://{}:{}/nodes"
     CHAIN_URL = "http://{}:{}/chain"
@@ -123,9 +125,9 @@ class FullNode(NodeMixin):
                 raise Exception()
             remote_chain = self.download()
             self.peoplechain = Peoplechain(remote_chain)
-            self.broadcast_node(self.node)
             self.node = self.get_my_node()
             self.full_nodes.union(self.node)
+            self.broadcast_node()
 
         print ("\n -------------- Starting Full Node Server -------------- \n")
         self.app.run('0.0.0.0', self.FULL_NODE_PORT)
@@ -162,7 +164,7 @@ class FullNode(NodeMixin):
         my_node = requests.get('https://api.ipify.org').text
         return my_node
 
-    def broadcast_node(self, node):
+    def broadcast_node(self):
         bad_nodes = set()
         data = {
             "host": self.node
@@ -170,7 +172,7 @@ class FullNode(NodeMixin):
         for node in self.full_nodes:
             url = self.NODES_URL.format(node, self.FULL_NODE_PORT)
             try:
-                requests.post(url, json.data)
+                requests.post(url, json=data)
             except requests.exceptions.RequestException as re:
                 bad_nodes.add(node)
 
@@ -255,4 +257,8 @@ class FullNode(NodeMixin):
         return str(self.peoplechain.get_balance(address))
 
 if __name__ == '__main__':
-    node = FullNode()
+    private_key = str(input('Enter private key, leave blank for new chain'))
+    if private_key == '':
+        node = FullNode()
+    else:
+        node = FullNode(private_key)
