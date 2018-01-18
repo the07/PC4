@@ -12,7 +12,7 @@ import socket
 
 class NodeMixin(object):
 
-    full_nodes = set(['172.31.25.30']) #TODO move to a configuration file
+    full_nodes = set(['103.88.129.43']) #TODO move to a configuration file
     FULL_NODE_PORT = 30609
     NODES_URL = "http://{}:{}/nodes"
     CHAIN_URL = "http://{}:{}/chain"
