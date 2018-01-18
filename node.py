@@ -126,7 +126,7 @@ class FullNode(NodeMixin):
             remote_chain = self.download()
             self.peoplechain = Peoplechain(remote_chain)
             self.node = self.get_my_node()
-            self.full_nodes.union(self.node)
+            self.full_nodes.union([self.node])
             self.broadcast_node()
 
         print ("\n -------------- Starting Full Node Server -------------- \n")
