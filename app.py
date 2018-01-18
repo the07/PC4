@@ -123,16 +123,21 @@ class App(NodeMixin):
 
             record_request_form = soup.find(id="record_request_form")
             for record in unconfirmed_records:
+                length = 0
                 if record.endorser == user.address:
                     new_input_tag = soup.new_tag("input", type="checkbox", checked="checked", value=record.endorsee)
                     new_input_tag["name"] = record.endorsee
-                    new_input_tag.string = record.endorsee + "      Detail: " + record.detail
+                    new_input_tag.string = record.endorsee
                     record_request_form.append(new_input_tag)
                     new_input_tag_detail = soup.new_tag("input", type="text", value=record.detail)
                     new_input_tag_detail['readonly'] = 'readonly'
+                    new_input_tag_detail['name'] = 'detail'
                     record_request_form.append(new_input_tag_detail)
-                submit_tag = soup.new_tag("input", type="submit", value="Sign")
-                record_request_form.append(submit_tag)
+                    length += 1
+                if length > 0:
+                    submit_tag = soup.new_tag("input", type="submit", value="Sign")
+                    record_request_form.append(submit_tag)
+
 
             return str(soup)
 
@@ -148,7 +153,7 @@ class App(NodeMixin):
         record_data = content.split('&')
         endorser = record_data[0].split('=')[1]
         detail = record_data[1].split('=')[1]
-        record = Record(self.key.get_public_key(), endorser, detail)
+        record = Record(self.key.get_public_key(), endorser.replace('%3A', ':'), detail)
         self.broadcast_record(record)
         message = "Record created. <a href='/user'>Go Back</a>"
         return json.dumps(message)
@@ -163,12 +168,14 @@ class App(NodeMixin):
                 self.key = data
         content = request.args.keys()
         detail = request.content.read().decode('utf-8').split('=')[1]
+        print (content, detail)
+        '''
         for each_endorsee in content:
             record = Record(each_endorsee, self.key.get_public_key(), detail)
             record.sign(self.key.get_private_key())
             self.broadcast_record(record)
         message = "Checked records signed. <a href='/user'>Go Back</a>"
         return json.dumps(message)
-
+        '''
 if __name__ == '__main__':
     app = App()
