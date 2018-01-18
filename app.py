@@ -62,8 +62,8 @@ class App(NodeMixin):
         # Read request content
         content = request.content.read().decode('utf-8')
         user_data = content.split('&')
-        name = user_data[0].split('=')[1]
-        email = user_data[1].split('=')[1]
+        name = user_data[0].split('=')[1].replace('%2B', ' ')
+        email = user_data[1].split('=')[1].replace('%40', '+')
         user_type = user_data[2].split('=')[1]
         # Initialize a key pair
         self.key = Key()
@@ -121,23 +121,24 @@ class App(NodeMixin):
                     new_p_tag.string = "Record Detail: " + record.detail + "        Signed By: Pending"
                     records_div.append(new_p_tag)
 
-            record_request_form = soup.find(id="record_request_form")
+            record_requests_div = soup.find(id="record_requests")
             for record in unconfirmed_records:
-                length = 0
-                if record.endorser == user.address:
-                    new_input_tag = soup.new_tag("input", type="checkbox", checked="checked", value=record.endorsee)
-                    new_input_tag["name"] = record.endorsee
-                    new_input_tag.string = record.endorsee
-                    record_request_form.append(new_input_tag)
-                    new_input_tag_detail = soup.new_tag("input", type="text", value=record.detail)
-                    new_input_tag_detail['readonly'] = 'readonly'
-                    new_input_tag_detail['name'] = 'detail'
-                    record_request_form.append(new_input_tag_detail)
-                    length += 1
-                if length > 0:
-                    submit_tag = soup.new_tag("input", type="submit", value="Sign")
-                    record_request_form.append(submit_tag)
-
+                new_form_tag = soup.new_tag('form', method='post', action='/sign', enctype="application/x-www-form-urlencoded")
+                new_form_tag['accept-charset']='utf-8'
+                new_input_tag = soup.new_tag("input", type="textarea")
+                new_input_tag['readonly'] = None
+                new_input_tag["name"] = "endorsee"
+                new_input_tag["value"] = record.endorsee
+                new_input_tag["size"] = "160"
+                new_form_tag.append(new_input_tag)
+                new_input_tag_detail = soup.new_tag("input", type="text")
+                new_input_tag_detail['readonly'] = None
+                new_input_tag_detail['name'] = "detail"
+                new_input_tag_detail['value'] = record.detail
+                new_form_tag.append(new_input_tag_detail)
+                submit_tag = soup.new_tag("input", type="submit", value="Sign")
+                new_form_tag.append(submit_tag)
+                record_requests_div.append(new_form_tag)
 
             return str(soup)
 
@@ -166,16 +167,17 @@ class App(NodeMixin):
         else:
             for data in self.session:
                 self.key = data
-        content = request.args.keys()
-        detail = request.content.read().decode('utf-8').split('=')[1]
-        print (content, detail)
+        content = request.content.read().decode('utf-8')
+        endorsee = content.split('&')[0].split('=')[1].replace('%3A', ':')
+        detail = content.split('&')[1].split('=')[1].replace('%2B', '+')
+        print (endorsee, detail, self.key.get_public_key())
         '''
-        for each_endorsee in content:
-            record = Record(each_endorsee, self.key.get_public_key(), detail)
-            record.sign(self.key.get_private_key())
-            self.broadcast_record(record)
+        record = Record(endorsee, self.key.get_public_key(), detail)
+        record.sign(self.key.get_private_key())
+        self.broadcast_record(record)
         message = "Checked records signed. <a href='/user'>Go Back</a>"
         return json.dumps(message)
         '''
+
 if __name__ == '__main__':
     app = App()
