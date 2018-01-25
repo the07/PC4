@@ -107,9 +107,9 @@ class App(NodeMixin):
         content = request.content.read().decode('utf-8')
         password = content.split('=')[1]
         # Initialize a key pair from existing key
-        self.key = Key(password)
+        key = Key(password)
         session_id = request.getSession().uid.decode('utf-8')
-        self.instance = Instance(self.session_id, self.key)
+        self.instance = Instance(session_id, key)
         request.redirect('/user')
         return
 
