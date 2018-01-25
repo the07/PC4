@@ -39,6 +39,19 @@ class App(NodeMixin):
         self.request_nodes_from_all()
         self.app.run('0.0.0.0', self.CLIENT_PORT)
 
+    def get_all_user_address(self):
+        self.request_nodes_from_all()
+        for node in self.full_nodes:
+            url = self.USER_URL.format(node, self.FULL_NODE_PORT)
+            try:
+                response = requests.get(url)
+                addresses = []
+                for address in json.loads(response.content.decode('utf-8'))['users']:
+                    addresses.append(address)
+                return addresses
+            except requests.exceptions.RequestException as re:
+                pass
+
     def get_genesis_user_address(self):
         self.request_nodes_from_all()
         for node in self.full_nodes:
@@ -135,6 +148,7 @@ class App(NodeMixin):
 
         user = self.get_user(key.get_public_key())
         unconfirmed_records = self.get_unconfirmed_records(key.get_public_key())
+        addresses = self.get_all_user_address()
 
         html_file = open('web/user.html').read()
         soup = BeautifulSoup(html_file, 'html.parser')
@@ -144,6 +158,12 @@ class App(NodeMixin):
         soup.find(id='email').string = user.email
         soup.find(id='balance').string = self.get_balance(user.address)
         soup.find(id='user_type').string = user.user_type
+
+        select_div = soup.find(id="address_list")
+        for address in addresses:
+            new_option_tag = soup.new_tag('option')
+            new_option_tag['value'] = address
+            select_div.append(new_option_tag)
 
         records_div = soup.find(id="records")
         for rec in user.records:

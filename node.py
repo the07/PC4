@@ -218,6 +218,15 @@ class FullNode(NodeMixin):
         }
         return json.dumps(response).encode('utf-8')
 
+    @app.route('/user', methods=['GET'])
+    def get_all_user_address(self, request):
+
+        data = {
+            "users": [user.address for user in self.peoplechain.users]
+        }
+
+        return json.dumps(data).encode('utf-8')
+
     @app.route('/user/<address>', methods=['GET'])
     def get_user_by_address(self, request, address):
         user = self.peoplechain.get_user(address)
