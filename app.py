@@ -13,11 +13,22 @@ from node import NodeMixin
 
 import razorpay
 
+class Instance:
+
+    def __init__(self, session_id, key):
+
+        self.__session_id__ = session_id
+        self.__key__ = key
+
+    def get_key_by_session(self, session_id):
+
+        if self.__session_id__ == session_id:
+            return self.__key__
+
 class App(NodeMixin):
 
     app = Klein()
     CLIENT_PORT = 30906
-    session = set()
 
     def __init__(self):
         self.request_nodes_from_all()
@@ -97,112 +108,105 @@ class App(NodeMixin):
         password = content.split('=')[1]
         # Initialize a key pair from existing key
         self.key = Key(password)
-        self.session.add(self.key)
+        session_id = request.getSession().uid.decode('utf-8')
+        self.instance = Instance(self.session_id, self.key)
         request.redirect('/user')
         return
 
     @app.route('/logout', methods=['GET'])
     def logout(self, request):
-        self.session.clear()
+        request.getSession().expire()
         request.redirect('/')
         return
 
     @app.route('/user', methods=['GET'])
     def user_profile(self, request):
-        if len(self.session) == 0:
-            message = "Please Login, <a href='index.html'>Login</a>"
-            return json.dumps(message)
-        else:
-            for data in self.session:
-                self.key = data
-            user = self.get_user(self.key.get_public_key())
-            unconfirmed_records = self.get_unconfirmed_records(self.key.get_public_key())
 
-            html_file = open('web/user.html').read()
-            soup = BeautifulSoup(html_file, 'html.parser')
+        session_id = request.getSession().uid.decode('utf-8')
+        key = self.instance.get_key_by_session(session_id)
 
-            soup.find(id='name').string = user.name
-            soup.find(id='address').string = user.address
-            soup.find(id='email').string = user.email
-            soup.find(id='balance').string = self.get_balance(user.address)
-            soup.find(id='user_type').string = user.user_type
+        user = self.get_user(key.get_public_key())
+        unconfirmed_records = self.get_unconfirmed_records(key.get_public_key())
 
-            records_div = soup.find(id="records")
-            for rec in user.records:
-                record = Record.from_json(rec)
+        html_file = open('web/user.html').read()
+        soup = BeautifulSoup(html_file, 'html.parser')
+
+        soup.find(id='name').string = user.name
+        soup.find(id='address').string = user.address
+        soup.find(id='email').string = user.email
+        soup.find(id='balance').string = self.get_balance(user.address)
+        soup.find(id='user_type').string = user.user_type
+
+        records_div = soup.find(id="records")
+        for rec in user.records:
+            record = Record.from_json(rec)
+            new_p_tag = soup.new_tag('p')
+            new_p_tag.string = "Record Detail: " + record.detail + "        Signed By: " + record.endorser
+            records_div.append(new_p_tag)
+
+        for record in unconfirmed_records:
+            if record.endorsee == user.address:
                 new_p_tag = soup.new_tag('p')
-                new_p_tag.string = "Record Detail: " + record.detail + "        Signed By: " + record.endorser
+                new_p_tag.string = "Record Detail: " + record.detail + "        Signed By: Pending"
                 records_div.append(new_p_tag)
 
-            for record in unconfirmed_records:
-                if record.endorsee == user.address:
-                    new_p_tag = soup.new_tag('p')
-                    new_p_tag.string = "Record Detail: " + record.detail + "        Signed By: Pending"
-                    records_div.append(new_p_tag)
+        record_requests_div = soup.find(id="record_requests")
+        for record in unconfirmed_records:
+            if record.endorser == user.address:
+                new_form_tag = soup.new_tag('form', method='post', action='/sign', enctype="application/x-www-form-urlencoded")
+                new_form_tag['accept-charset']='utf-8'
+                new_input_tag = soup.new_tag("input", type="textarea")
+                new_input_tag['readonly'] = None
+                new_input_tag["name"] = "endorsee"
+                new_input_tag["value"] = record.endorsee
+                new_input_tag["size"] = "160"
+                new_form_tag.append(new_input_tag)
+                new_input_tag_detail = soup.new_tag("input", type="text")
+                new_input_tag_detail['readonly'] = None
+                new_input_tag_detail['name'] = "detail"
+                new_input_tag_detail['value'] = record.detail
+                new_form_tag.append(new_input_tag_detail)
+                submit_tag = soup.new_tag("input", type="submit", value="Sign")
+                new_form_tag.append(submit_tag)
+                record_requests_div.append(new_form_tag)
 
-            record_requests_div = soup.find(id="record_requests")
-            for record in unconfirmed_records:
-                if record.endorser == user.address:
-                    new_form_tag = soup.new_tag('form', method='post', action='/sign', enctype="application/x-www-form-urlencoded")
-                    new_form_tag['accept-charset']='utf-8'
-                    new_input_tag = soup.new_tag("input", type="textarea")
-                    new_input_tag['readonly'] = None
-                    new_input_tag["name"] = "endorsee"
-                    new_input_tag["value"] = record.endorsee
-                    new_input_tag["size"] = "160"
-                    new_form_tag.append(new_input_tag)
-                    new_input_tag_detail = soup.new_tag("input", type="text")
-                    new_input_tag_detail['readonly'] = None
-                    new_input_tag_detail['name'] = "detail"
-                    new_input_tag_detail['value'] = record.detail
-                    new_form_tag.append(new_input_tag_detail)
-                    submit_tag = soup.new_tag("input", type="submit", value="Sign")
-                    new_form_tag.append(submit_tag)
-                    record_requests_div.append(new_form_tag)
-
-            return str(soup)
+        return str(soup)
 
     @app.route('/record', methods=['POST'])
     def create_record(self, request):
-        if len(self.session) == 0:
-            message = "Please Login, <a href='index.html'>Login</a>"
-            return json.dumps(message)
-        else:
-            for data in self.session:
-                self.key = data
+        session_id = request.getSession().uid.decode('utf-8')
+        key = self.instance.get_key_by_session(session_id)
         content = request.content.read().decode('utf-8')
         record_data = content.split('&')
         endorser = record_data[0].split('=')[1]
         detail = record_data[1].split('=')[1]
-        record = Record(self.key.get_public_key(), endorser.replace('%3A', ':'), detail)
+        record = Record(key.get_public_key(), endorser.replace('%3A', ':'), detail)
         self.broadcast_record(record)
         message = "Record created. <a href='/user'>Go Back</a>"
         return json.dumps(message)
 
     @app.route('/sign', methods=['POST'])
     def sign_record(self, request):
-        if len(self.session) == 0:
-            message = "Please Login, <a href='index.html'>Login</a>"
-            return json.dumps(message)
-        else:
-            for data in self.session:
-                self.key = data
+        session_id = request.getSession().uid.decode('utf-8')
+        key = self.instance.get_key_by_session(session_id)
         content = request.content.read().decode('utf-8')
         endorsee = content.split('&')[0].split('=')[1].replace('%3A', ':')
         detail = content.split('&')[1].split('=')[1].replace('%2B', '+')
-        print (endorsee, detail, self.key.get_public_key())
-        record = Record(endorsee, self.key.get_public_key(), detail)
-        record.sign(self.key.get_private_key())
+        print (endorsee, detail, key.get_public_key())
+        record = Record(endorsee, key.get_public_key(), detail)
+        record.sign(key.get_private_key())
         self.broadcast_record(record)
         message = "Checked records signed. <a href='/user'>Go Back</a>"
         return json.dumps(message)
 
     @app.route('/purchase', methods=['POST'])
     def handle_payment(self, request):
+        session_id = request.getSession().uid.decode('utf-8')
+        key = self.instance.get_key_by_session(session_id)
         razorpay_payment_id = request.content.read().decode('utf-8').split('&')[1].split('=')[1]
         #TODO: capture payment
         endorser = self.get_genesis_user_address()
-        endorsee = self.key.get_public_key()
+        endorsee = key.get_public_key()
         detail = "CoinPurchase"
         record = Record(endorsee, endorser, detail)
         self.broadcast_record(record)
