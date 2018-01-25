@@ -20,6 +20,10 @@ class Instance:
         self.__session_id__ = session_id
         self.__key__ = key
 
+    @property
+    def session_id(self):
+        return self.__session_id__
+
     def get_key_by_session(self, session_id):
 
         if self.__session_id__ == session_id:
@@ -29,6 +33,7 @@ class App(NodeMixin):
 
     app = Klein()
     CLIENT_PORT = 30906
+    instances = []
 
     def __init__(self):
         self.request_nodes_from_all()
@@ -109,7 +114,8 @@ class App(NodeMixin):
         # Initialize a key pair from existing key
         key = Key(password)
         session_id = request.getSession().uid.decode('utf-8')
-        self.instance = Instance(session_id, key)
+        instance = Instance(session_id, key)
+        self.instances.append(instance)
         request.redirect('/user')
         return
 
@@ -123,7 +129,9 @@ class App(NodeMixin):
     def user_profile(self, request):
 
         session_id = request.getSession().uid.decode('utf-8')
-        key = self.instance.get_key_by_session(session_id)
+        for instance in self.instances:
+            if instance.session_id == session_id:
+                key = instance.get_key_by_session(session_id)
 
         user = self.get_user(key.get_public_key())
         unconfirmed_records = self.get_unconfirmed_records(key.get_public_key())
@@ -175,7 +183,9 @@ class App(NodeMixin):
     @app.route('/record', methods=['POST'])
     def create_record(self, request):
         session_id = request.getSession().uid.decode('utf-8')
-        key = self.instance.get_key_by_session(session_id)
+        for instance in self.instances:
+            if instance.session_id == session_id:
+                key = instance.get_key_by_session(session_id)
         content = request.content.read().decode('utf-8')
         record_data = content.split('&')
         endorser = record_data[0].split('=')[1]
@@ -188,7 +198,9 @@ class App(NodeMixin):
     @app.route('/sign', methods=['POST'])
     def sign_record(self, request):
         session_id = request.getSession().uid.decode('utf-8')
-        key = self.instance.get_key_by_session(session_id)
+        for instance in self.instances:
+            if instance.session_id == session_id:
+                key = instance.get_key_by_session(session_id)
         content = request.content.read().decode('utf-8')
         endorsee = content.split('&')[0].split('=')[1].replace('%3A', ':')
         detail = content.split('&')[1].split('=')[1].replace('%2B', '+')
@@ -202,7 +214,9 @@ class App(NodeMixin):
     @app.route('/purchase', methods=['POST'])
     def handle_payment(self, request):
         session_id = request.getSession().uid.decode('utf-8')
-        key = self.instance.get_key_by_session(session_id)
+        for instance in self.instances:
+            if instance.session_id == session_id:
+                key = instance.get_key_by_session(session_id)
         razorpay_payment_id = request.content.read().decode('utf-8').split('&')[1].split('=')[1]
         #TODO: capture payment
         endorser = self.get_genesis_user_address()
