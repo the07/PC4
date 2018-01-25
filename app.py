@@ -163,6 +163,7 @@ class App(NodeMixin):
         for address in addresses:
             new_option_tag = soup.new_tag('option')
             new_option_tag['value'] = address
+            new_option_tag.string = address
             select_div.append(new_option_tag)
 
         records_div = soup.find(id="records")
